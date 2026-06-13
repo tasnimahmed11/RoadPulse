@@ -1,5 +1,15 @@
 # RoadPulse
 **ADB: AI for Safer Roads Innovation Challenge**
+### How might we use AI and mobility data to determine where speed limits are misaligned with real-world road conditions, supporting evidence-based speed management across Asia and the Pacific? 
+
+Develop an analytical model that: 
+
+- Assesses whether posted speed limits align with Safe System principles 
+- Identifies road segments where limits are inconsistent with road function or vulnerable road user exposure
+- Produces a spatial output, a map-based visualization, highlighting priority segments for review or intervention 
+- Is scalable and replicable across countries in Asia and the Pacific 
+
+---
 
 This repository contains our team's data exploration and analysis work for the ADB AI for Safer Roads 2026 Innovation Challenge.
 
