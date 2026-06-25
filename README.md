@@ -32,11 +32,54 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### 3. Run the notebook
+### 3. Set API key (for image download)
 
 ```bash
-jupyter notebook data_exploration.ipynb
+export GOOGLE_MAPS_API_KEY="your-key-here"
 ```
+
+---
+
+## Pipeline
+
+Run these folders in order:
+
+### 1. `download_road_images/`
+Downloads 4-directional Street View images for valid road segments from a GeoJSON file.
+
+```bash
+cd download_road_images
+python download_images.py path/to/ADB_Innovation_Thailand.geojson
+```
+
+- Images save to `streetview_images/`
+- Progress is tracked in `download_tracker.csv` (safe to re-run)
+
+### 2. `extract_variables/`
+Extracts road features from the downloaded images using YOLO and a local VLM (Ollama).
+
+```bash
+cd extract_variables
+
+# YOLO — vehicle/pedestrian counts
+python analyze_yolo.py --test    # test on 5 roads
+python analyze_yolo.py           # full run
+
+# VLM — road condition, walkability, etc. (requires Ollama + qwen2.5vl:7b)
+python analyze_vlm.py --test
+python analyze_vlm.py
+```
+
+Outputs: `results_yolo.csv` and `results_vlm.csv` (merge into `variables_*.csv` for risk scoring).
+
+### 3. `Risk_Score/`
+Calculates image-based risk scores and merges with accident data.
+
+Open and run the notebooks:
+- `risk_score_cal_thailand.ipynb` — Thailand
+- `risk_score_cal_maharashtra.ipynb` — Maharashtra
+
+Outputs: `final_risk_scores_thailand.csv`, `final_risk_scores_maharashtra.csv`
 
 ---
 

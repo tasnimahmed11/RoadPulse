@@ -15,3 +15,15 @@ pyproj==3.7.2
 python-dateutil==2.9.0.post0
 shapely==2.1.2
 six==1.17.0
+
+# for the pipeline: download_road_images, extract_variables, Risk_Score
+folium==0.20.0
+requests==2.34.2
+scikit-learn==1.9.0
+torch==2.12.0
+torchvision==0.27.0
+ultralytics==8.4.69
+opencv-python==4.13.0.92
+ollama==0.6.2
+ipykernel==7.3.0
+notebook
