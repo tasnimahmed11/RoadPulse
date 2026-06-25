@@ -219,4 +219,9 @@ __marimo__/
 
 # ADB Data
 .adb_data
+ADB_ RoadPulse/
+
+# macOS / local scratch
+.DS_Store
+Asif/
 
