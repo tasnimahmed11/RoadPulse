@@ -1,0 +1,61 @@
+---
+title: "Safety vs Risk"
+author: "Mahbub R Maulaa"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r}
+#Load libraries
+mainlib <- c("tidyverse", "dplyr", "sf", "ggplot2")
+lapply(mainlib, library, character.only = TRUE)
+
+#Load datasets
+thaiRisk <- read.csv("~/GitHub/RoadPulse2/Risk_Score/final_risk_scores_thailand.csv")
+indiaRisk <- read.csv("~/GitHub/RoadPulse2/Risk_Score/final_risk_scores_maharashtra.csv")
+thaiVar <- read.csv("~/GitHub/RoadPulse2/Risk_Score/variables_thailand.csv")
+indiaVar <- read.csv("~/GitHub/RoadPulse2/Risk_Score/variables_maharashtra.csv")
+thaiRoad <- read.csv("~/GitHub/RoadPulse2/data/thai_clean_gdf.csv")
+indiaRoad <- read.csv("~/GitHub/RoadPulse2/data/india_clean_gdf.csv")
+thaiSafety <- read.csv("~/GitHub/RoadPulse2/data/thai_safety_score.csv")
+indiaSafety <- read.csv("~/GitHub/RoadPulse2/data/india_safety_score.csv")
+```
+```{r}
+thaiVar2 <- left_join(thaiVar, thaiRisk, by = "OBJECTID")
+indiaVar2 <- left_join(indiaVar, thaiRisk, by = "OBJECTID")
+```
+
+```{r  fig.height=10, fig.width=15}
+thaiVar2 |>
+  filter(SpeedLimit > 0) |>
+  ggplot(aes(x = RoadClass, y = F85thPercentileSpeed, color = RoadClass, size = PercentOverLimit)) +
+  geom_point(alpha = 0.5) +
+  geom_hline(aes(yintercept = SpeedLimit), linetype = "dashed", color = "grey40") +
+  scale_size_continuous(range = c(2, 12)) +
+  facet_wrap(~SpeedLimit) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+```{r fig.height=10, fig.width=15}
+thaiVar2 |>
+  filter(SpeedLimit > 0) |>
+  ggplot(aes(x = RoadClass, y = F85thPercentileSpeed, color = RoadClass, size = image_risk_score)) +
+  geom_point(alpha = 0.5) +
+  geom_hline(aes(yintercept = SpeedLimit), linetype = "dashed", color = "grey40") +
+  scale_size_continuous(range = c(2, 12)) +
+  facet_wrap(~SpeedLimit) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+```{r fig.height=10, fig.width=15}
+thaiSafety |>
+  filter(SpeedLimit > 0) |>
+  ggplot(aes(x = SpeedSafetyScore, fill = RoadClass)) +
+  geom_histogram(stat = "bin") +
+  facet_wrap(~SpeedLimit) +
+  theme_minimal()
+```
+
+
