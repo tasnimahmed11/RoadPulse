@@ -230,5 +230,6 @@ code/
 .claude
 
 # map outputs
-maps
+maps/
 
+deploy_map/index.html
