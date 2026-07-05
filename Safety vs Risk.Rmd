@@ -23,6 +23,8 @@ indiaSafety <- read.csv("~/GitHub/RoadPulse2/data/india_safety_score.csv")
 ```{r}
 thaiVar2 <- left_join(thaiVar, thaiRisk, by = "OBJECTID")
 indiaVar2 <- left_join(indiaVar, thaiRisk, by = "OBJECTID")
+head(thaiVar2)
+head(indiaVar2)
 ```
 
 ```{r  fig.height=10, fig.width=15}
@@ -137,12 +139,16 @@ thaiVarinclude <- thaiVar |>
     "yolo_total_pedestrians",
     "vlm_road_condition_score",
     "yolo_total_bicycles",
+    "vlm_pedestrian_crossing_visible",
+    "vlm_pedestrian_crossing_type",
+    "vlm_bike_lane_present",
 
 # negatives
     "vlm_lane_count",
     # "vlm_curvature_visible",
     "vlm_intersection_visible",
-    "yolo_total_motorcycles"
+    "yolo_total_motorcycles",
+    "vlm_footpath_obstruction"
     # "vlm_overall_walkability"
     # "vlm_building_density_score"
 )
@@ -150,6 +156,8 @@ thaiVarinclude <- thaiVar |>
 thaiAll <- thaiSafety |>
   left_join(thaiVarinclude, by = "OBJECTID") |>
   left_join(thaiRisk, by = "OBJECTID")
+
+head(thaiAll, 20)
 ```
 
 ```{r fig.height=10, fig.width=15}
@@ -167,3 +175,80 @@ thaiAll |>
   facet_wrap(~RoadClass) +
   theme_minimal()
 ```
+```{r}
+thaiAll <- thaiAll |>
+  mutate(
+    priority_improvement = case_when(
+      vlm_intersection_visible == 1 & vlm_pedestrian_crossing_visible == 0 ~ "Add pedestrian crossing and adjust the traffic light to prioritize pedestrians & cyclists safety",
+      vlm_intersection_visible == 0 & vlm_pedestrian_crossing_visible == 0 & vlm_population_density_score >= 5 & RoadClass %in% c("motorway", "trunk") ~ "Provide a bridge for pedestrians and cyclists",
+      vlm_intersection_visible == 0 & vlm_pedestrian_crossing_visible == 0 & vlm_population_density_score >= 5 ~ "Provide a traffic calming and safety crossing for pedestrians and cyclists",
+      RoadClass != "motorway" & vlm_footpath_score == 0 ~ "Provide footpath",
+      vlm_footpath_score > 0 & vlm_footpath_obstruction == 1 ~ "Clear footpaths",
+      yolo_total_bicycles > 0 & vlm_bike_lane_present == 0 ~ "Provide separated bike lane",
+      vlm_lane_marking_quality == 0 ~ "Improve lane marking",
+      PriorityTier %in% c("Critical", "High") & RoadClass %in% c("motorway", "trunk") ~ "Add speed camera/speed limit enforcement",
+      PriorityTier %in% c("Critical", "High") & RoadClass %in% c("primary", "secondary") ~ "Add traffic calming and speed camera/speed limit enforcement",
+      TRUE ~ "No priority intervention needed"
+    )
+  )
+```
+
+```{r}
+indiaVarinclude <- thaiVar |>
+  select(
+    
+#identity
+    "OBJECTID",
+    
+#positive    
+    "vlm_population_density_score",
+    "yolo_total_vehicles",
+    "vlm_footpath_score",
+    "vlm_lane_marking_quality",
+    "yolo_total_pedestrians",
+    "vlm_road_condition_score",
+    "yolo_total_bicycles",
+    "vlm_pedestrian_crossing_visible",
+    "vlm_pedestrian_crossing_type",
+    "vlm_bike_lane_present",
+
+# negatives
+    "vlm_lane_count",
+    # "vlm_curvature_visible",
+    "vlm_intersection_visible",
+    "yolo_total_motorcycles",
+    "vlm_footpath_obstruction"
+    # "vlm_overall_walkability"
+    # "vlm_building_density_score"
+)
+
+indiaAll <- indiaSafety |>
+  left_join(indiaVarinclude, by = "OBJECTID") |>
+  left_join(indiaRisk, by = "OBJECTID")
+
+head(indiaAll, 20)
+```
+
+```{r}
+indiaAll <- indiaAll |>
+  mutate(
+    priority_improvement = case_when(
+      vlm_intersection_visible == 1 & vlm_pedestrian_crossing_visible == 0 ~ "Add pedestrian crossing and adjust the traffic light to prioritize pedestrians & cyclists safety",
+      vlm_intersection_visible == 0 & vlm_pedestrian_crossing_visible == 0 & vlm_population_density_score >= 5 & RoadClass %in% c("motorway", "trunk") ~ "Provide a bridge for pedestrians and cyclists",
+      vlm_intersection_visible == 0 & vlm_pedestrian_crossing_visible == 0 & vlm_population_density_score >= 5 ~ "Provide a traffic calming and safety crossing for pedestrians and cyclists",
+      RoadClass != "motorway" & vlm_footpath_score == 0 ~ "Provide footpath",
+      vlm_footpath_score > 0 & vlm_footpath_obstruction == 1 ~ "Clear footpaths",
+      yolo_total_bicycles > 0 & vlm_bike_lane_present == 0 ~ "Provide separated bike lane",
+      vlm_lane_marking_quality == 0 ~ "Improve lane marking",
+      PriorityTier %in% c("Critical", "High") & RoadClass %in% c("motorway", "trunk") ~ "Add speed camera/speed limit enforcement",
+      PriorityTier %in% c("Critical", "High") & RoadClass %in% c("primary", "secondary") ~ "Add traffic calming and speed camera/speed limit enforcement",
+      TRUE ~ "No priority intervention needed"
+    )
+  )
+```
+
+```{r}
+write.csv(thaiAll, file="policy_rec/thai_priority_improvement.csv")
+write.csv(indiaAll, file="policy_rec/india_priority_improvement.csv")
+```
+
