@@ -96,6 +96,19 @@ Run in order once the data above is in place:
 
 Each of `02`–`04` saves its scored output to `data/*_safety_score.csv`, `data/*_risk_score.csv`, and `data/*_composite_score.csv` respectively (geometry stored as WKT).
 
+#### Lens 1: how the Speed Safety Score is calculated
+
+`SpeedSafetyScore` measures how far observed speeds exceed *biomechanically safe* thresholds, weighted by how much traffic actually uses the road.
+
+1. **Gap features** — three raw metrics are derived per segment and clipped at zero (only exceedances count):
+   - `f85LimitGap` = F85th-percentile speed − Speed Limit (fast-tail over-speeding)
+   - `MedianLimitGap` = Median speed − Speed Limit (systemic, typical-driver over-speeding)
+   - `SpeedSpread` = F85th-percentile speed − Median speed (speed inconsistency, a known independent crash risk factor)
+2. **Safe System thresholds** — rather than trusting the posted limit, each segment is assigned a safe speed threshold looked up by `(RoadClass, LandUse)` from the World Bank R4L Framework (Turner et al. 2024, *Guide for Safe Speeds*). This flags exceedance against the biomechanically safe speed even when a driver is technically obeying an outdated or too-permissive posted limit.
+3. **SpeedComponent (0–1)** — five signals are blended with R4L-derived weights: `F85ExceedsSafeThreshold` (0.25), `MedianExceedsSafeThreshold` (0.25), normalised median gap (0.20), normalised F85 gap (0.15), normalised speed spread (0.15). The two binary exceedance flags carry half the weight since they're the most directly evidence-linked signals.
+4. **Volume weighting & rescaling** — `RawScore = SpeedComponent × log1p(traffic volume)`, then min-max rescaled to **0–100** within each country. This ensures a dangerous speed profile only reaches a high score if the road also carries meaningful traffic exposure.
+5. **Priority tiers** — Low (0–25), Medium (25–50), High (50–75), Critical (75–100). Scores are country-relative, not comparable across India and Thailand in absolute terms.
+
 ### 5. `policy_rec/`
 Rule-based intervention recommendation per road segment (e.g. *Provide footpath*, *Add speed camera/speed limit enforcement*, *No priority intervention needed*), keyed by `OBJECTID`. Merged into the composite score as a descriptive field — it's not blended into `CompositeScore`, but it's browsable as its own layer on the interactive map.
 
