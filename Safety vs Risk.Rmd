@@ -50,6 +50,8 @@ thaiVar2 |>
 ```
 
 ```{r fig.height=10, fig.width=15}
+head(thaiSafety)
+
 thaiSafety |>
   filter(SpeedLimit > 0) |>
   ggplot(aes(x = SpeedSafetyScore, fill = RoadClass)) +
@@ -57,5 +59,111 @@ thaiSafety |>
   facet_wrap(~SpeedLimit) +
   theme_minimal()
 ```
+```{r}
+thaiSafety |>
+  filter(SpeedLimit > 0) |>
+  split(~ SpeedLimit) |>
+  lapply(function(sub_data) {
+    current_limit <- unique(sub_data$SpeedLimit)
+    
+    p <- ggplot(sub_data, aes(x = SpeedSafetyScore, fill = RoadClass)) +
+      geom_histogram(bins = 30, alpha = 0.7, position = "stack") +
+      theme_minimal() +
+      labs(
+        title = paste("Speed Safety Score for Speed Limit:", current_limit),
+        x = "Speed Safety Score",
+        y = "Count"
+      )
+    
+    print(p) # This forces R to render the graph immediately
+  }) |> 
+  invisible() # Keeps your console clean by hiding the empty list output
+```
 
+```{r}
+thaiSafety |>
+  filter(SpeedLimit > 0) |>
+  split(~ RoadClass) |>
+  lapply(function(sub_data) {
+    current_class <- unique(sub_data$RoadClass)
+    
+    p <- ggplot(sub_data, aes(x = SpeedSafetyScore, fill = factor(SpeedLimit))) +
+      geom_histogram(bins = 30, alpha = 0.7, position = "stack") +
+      theme_minimal() +
+      labs(
+        title = paste("Speed Safety Score for Road Class:", current_class),
+        x = "Speed Safety Score",
+        y = "Count"
+      )
+    
+    print(p) # This forces R to render the graph immediately
+  }) |> 
+  invisible() # Keeps your console clean by hiding the empty list output
+```
 
+```{r}
+thaiSafety |>
+  filter(SpeedLimit > 0 & PriorityTier == "High") |>
+  split(~ RoadClass) |>
+  lapply(function(sub_data) {
+    current_class <- unique(sub_data$RoadClass)
+    
+    p <- ggplot(sub_data, aes(x = SpeedSafetyScore, fill = factor(SpeedLimit))) +
+      geom_histogram(bins = 30, alpha = 0.7, position = "stack") +
+      theme_minimal() +
+      labs(
+        title = paste("Speed Safety Score for Road Class:", current_class),
+        x = "Speed Safety Score",
+        y = "Count"
+      )
+    
+    print(p) # This forces R to render the graph immediately
+  }) |> 
+  invisible() # Keeps your console clean by hiding the empty list output
+```
+
+```{r}
+thaiVarinclude <- thaiVar |>
+  select(
+    
+#identity
+    "OBJECTID",
+    
+#positive    
+    "vlm_population_density_score",
+    "yolo_total_vehicles",
+    "vlm_footpath_score",
+    "vlm_lane_marking_quality",
+    "yolo_total_pedestrians",
+    "vlm_road_condition_score",
+    "yolo_total_bicycles",
+
+# negatives
+    "vlm_lane_count",
+    # "vlm_curvature_visible",
+    "vlm_intersection_visible",
+    "yolo_total_motorcycles"
+    # "vlm_overall_walkability"
+    # "vlm_building_density_score"
+)
+
+thaiAll <- thaiSafety |>
+  left_join(thaiVarinclude, by = "OBJECTID") |>
+  left_join(thaiRisk, by = "OBJECTID")
+```
+
+```{r fig.height=10, fig.width=15}
+thaiAll |>
+  ggplot(aes(x = SpeedSafetyScore, y = image_risk_score, size = vlm_population_density_score, color = RoadClass)) + 
+  geom_point(alpha = 0.4) +
+  facet_wrap(~RoadClass) +
+  theme_minimal()
+```
+
+```{r fig.height=10, fig.width=15}
+thaiAll |>
+  ggplot(aes(x = SpeedSafetyScore, y = image_risk_score, size = vlm_footpath_score, color = RoadClass)) + 
+  geom_point(alpha = 0.4) +
+  facet_wrap(~RoadClass) +
+  theme_minimal()
+```
